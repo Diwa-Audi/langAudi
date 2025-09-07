@@ -1,0 +1,20 @@
+{
+    "manifest_version" : 3,
+    "version" : "1.0.0" , 
+    "name" : "langAudi",
+    "description" : "this is my second extension",
+    "action" :{
+        "default_popup" : "index.html"
+    },
+    "permissions": [
+        "scripting"
+    ],
+    "host_permissions" : [
+        "http://*/*",
+        "https://*/*",
+        "<all_urls>"
+],
+    "icons" : {
+        "48" : "Icon48.png"
+    }
+}
