@@ -1,13 +1,10 @@
-console.log("Background script loaded");
+console.log("Background script loaded and ready");
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log("Background received message:", message.type, message);
   
-  // ... rest of your code
-  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    // Handle single text translation (your original code)
-    if (message.type === "TRANSLATE_TEXT") {
-    console.log("Background: translating single text", message.text.substring(0, 30));
+  if (message.type === "TRANSLATE_TEXT") {
+    console.log("Translating single text:", message.text.substring(0, 30) + "...");
     
     translateSingleText(message.text, message.target || "en")
       .then(translatedText => {
@@ -21,9 +18,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
   
-  // Handle chunk translation (needed for your content script)
   if (message.type === "TRANSLATE_CHUNK") {
-    console.log(`Background: translating chunk of ${message.texts.length} items`);
+    console.log(`Translating chunk of ${message.texts.length} items`);
     
     translateChunk(message.texts, message.target || "en")
       .then(translations => {
@@ -38,38 +34,57 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
-// Alternative: MyMemory API (free, no key needed)
 async function translateSingleText(text, targetLanguage) {
+  if (!text || !text.trim()) return text;
+  
   try {
+    // Try Lingva Translate API (LibreTranslate alternative)
     const response = await fetch(
-      `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=auto|${targetLanguage}`
+      `https://lingva.ml/api/v1/auto/${targetLanguage}/${encodeURIComponent(text)}`
     );
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
     const data = await response.json();
-    return data.responseData.translatedText || text;
+    
+    if (data.translation) {
+      console.log(`Translation: "${text}" → "${data.translation}"`);
+      return data.translation;
+    } else {
+      console.warn("No translation returned");
+      return text;
+    }
   } catch (error) {
-    console.error("Translation failed:", error);
+    console.error("Lingva translation failed:", error);
+    
+    // Fallback: try a simple mock translation for testing
+    if (targetLanguage === 'es') {
+      return text + ' (ES)'; // Just append (ES) to test if the flow works
+    }
+    
     return text;
   }
 }
 
 async function translateChunk(texts, targetLanguage) {
   try {
-    const translations = await Promise.allSettled(
-      texts.map(text => translateSingleText(text, targetLanguage))
-    );
+    const translations = [];
     
-    return translations.map((result, index) => {
-      if (result.status === 'fulfilled') {
-        return result.value;
-      } else {
-        console.error(`Translation failed for text ${index}:`, result.reason);
-        return texts[index];
+    for (let i = 0; i < texts.length; i++) {
+      const result = await translateSingleText(texts[i], targetLanguage);
+      translations.push(result);
+      
+      // Small delay to avoid rate limiting
+      if (i < texts.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
-    });
+    }
     
+    return translations;
   } catch (error) {
     console.error("Chunk translation error:", error);
     return texts;
   }
 }
-});
