@@ -1,20 +1,28 @@
 {
-    "manifest_version" : 3,
-    "version" : "1.0.0" , 
-    "name" : "langAudi",
-    "description" : "this is my second extension",
-    "action" :{
-        "default_popup" : "index.html"
-    },
-    "permissions": [
-        "scripting"
-    ],
-    "host_permissions" : [
-        "http://*/*",
-        "https://*/*",
-        "<all_urls>"
-],
-    "icons" : {
-        "48" : "Icon48.png"
+  "manifest_version": 3,
+  "name": "langAudi",
+  "version": "1.0.0",
+  "description": "Translate any page using LibreTranslate",
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "scripting",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
     }
+  ],
+  "icons": {
+    "48": "Icon48.png"
+  }
 }

@@ -1,51 +1,52 @@
-import { useState } from 'react';
-// import reactLogo from './assets/react.svg';
-// import viteLogo from '/vite.svg';
-import './App.css';
+import React, { useState } from 'react';
 
-function App() {
-  const [colour, setColour] = useState<string>(''); // Initialize useState with an empty string
+const App: React.FC = () => {
+  const [isTranslating, setIsTranslating] = useState(false);
 
-  const onclick = async () => {
-    let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    chrome.scripting.executeScript({
-      target: { tabId: tab.id! },
-      args: [colour], // Pass the selected color as an argument
-      func: (selectedColour) => {
-        // This function runs in the context of the target tab
-        document.body.style.backgroundColor = selectedColour;
-      },
+  const handleTranslate = async (targetLang: string) => {
+    setIsTranslating(true);
+    
+    const [tab] = await chrome.tabs.query({active: true, currentWindow: true});
+    chrome.tabs.sendMessage(tab.id!, {
+      type: 'TRANSLATE_PAGE', 
+      targetLang: targetLang
     });
+    
+    setIsTranslating(false);
+  };
+
+  const handleRestore = async () => {
+    const [tab] = await chrome.tabs.query({active: true, currentWindow: true});
+    chrome.tabs.sendMessage(tab.id!, {type: 'RESTORE_PAGE'});
   };
 
   return (
-    <>
-      {/* <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card"> */}
-        <input
-          className='palette'
-          type="color"
-          onChange={(e) => setColour(e.currentTarget.value)} // Update the color state
-        />
-        <button onClick={() => onclick()}>click me!</button>
-
-        {/* <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p> */}
-    </>
+    <div style={{ padding: '16px', width: '250px' }}>
+      <h3>Page Translator</h3>
+      
+      <select style={{ width: '100%', marginBottom: '10px', padding: '5px' }}>
+        <option value="es">Spanish</option>
+        <option value="fr">French</option>
+        <option value="de">German</option>
+        <option value="hi">Hindi</option>
+      </select>
+      
+      <button 
+        onClick={() => handleTranslate('es')} 
+        disabled={isTranslating}
+        style={{ width: '100%', marginBottom: '10px', padding: '10px' }}
+      >
+        {isTranslating ? 'Translating...' : 'Translate Page'}
+      </button>
+      
+      <button 
+        onClick={handleRestore}
+        style={{ width: '100%', padding: '10px' }}
+      >
+        Restore Original
+      </button>
+    </div>
   );
-}
+};
 
 export default App;
