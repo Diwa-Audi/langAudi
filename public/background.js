@@ -68,20 +68,32 @@ async function translateSingleText(text, targetLanguage) {
   }
 }
 
+// async function translateChunk(texts, targetLanguage) {
+//   try {
+//     const translations = [];
+    
+//     for (let i = 0; i < texts.length; i++) {
+//       const result = await translateSingleText(texts[i], targetLanguage);
+//       translations.push(result);
+      
+//       // Small delay to avoid rate limiting
+//       if (i < texts.length - 1) {
+//         await new Promise(resolve => setTimeout(resolve, 100));
+//       }
+//     }
+    
+//     return translations;
+//   } catch (error) {
+//     console.error("Chunk translation error:", error);
+//     return texts;
+//   }
+// }
+
 async function translateChunk(texts, targetLanguage) {
   try {
-    const translations = [];
-    
-    for (let i = 0; i < texts.length; i++) {
-      const result = await translateSingleText(texts[i], targetLanguage);
-      translations.push(result);
-      
-      // Small delay to avoid rate limiting
-      if (i < texts.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-    }
-    
+    // Process all texts in parallel instead of sequentially
+    const promises = texts.map(text => translateSingleText(text, targetLanguage));
+    const translations = await Promise.all(promises);
     return translations;
   } catch (error) {
     console.error("Chunk translation error:", error);

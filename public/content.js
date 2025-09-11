@@ -5,8 +5,8 @@ const originalTexts = new Map();
 let isTranslating = false;
 
 // Tuning constants
-const BATCH_SIZE = 10; // number of elements per translation request
-const CHUNK_DELAY_MS = 200; // delay between batches to avoid rate limiting
+const BATCH_SIZE = 20; // number of elements per translation request
+const CHUNK_DELAY_MS = 50; // delay between batches to avoid rate limiting
 const MIN_TEXT_LENGTH = 3; // ignore very short strings
 
 // Listen for messages from popup
@@ -145,6 +145,7 @@ function restoreOriginalPage() {
   originalTexts.forEach((data) => {
     if (data.element && data.originalText) {
       data.element.textContent = data.originalText;
+
       restoredCount++;
     }
   });
